@@ -1,0 +1,23 @@
+version: "3.7"
+services:
+  whaling:
+    image: wynandbooysen/whaling:latest
+    environment:
+    - URL_LABEL=<YOUR_LABEL_GOES_HERE>
+    ports:
+      - target: 7001
+        published: 7001
+        protocol: tcp
+        mode: host
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    deploy:
+      mode: global
+      update_config:
+        parallelism: 1
+        delay: 15s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
