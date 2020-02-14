@@ -21,7 +21,7 @@ func main() {
 
 	if exists {
 
-		log.Println("Checking for: ", url)
+		log.Println("Checking for:", url)
 		router := mux.NewRouter().StrictSlash(true)
 		router.HandleFunc("/swarm-nodes", numberOfSwarmNodes)
 		router.HandleFunc("/swarm-services", listServices)
@@ -109,7 +109,18 @@ func listServices(w http.ResponseWriter, r *http.Request) {
 			replicas = strconv.FormatUint(*service.Spec.Mode.Replicated.Replicas, 10)
 		}
 
-		htmlOutput += fmt.Sprintf("%s | %s | %s | %s | %s | %v\n", service.ID, service.Spec.Name, sgURL, modeStr, replicas, service.Endpoint.Ports)
+		//Get published port number
+		portNumber := ""
+		for _, port := range service.Endpoint.Ports {
+
+			if port.Protocol == "tcp" {
+
+				portNumber = fmt.Sprint(port.PublishedPort)
+
+			}
+		}
+
+		htmlOutput += fmt.Sprintf("%s | %s | %s | %s | %s | %v\n", service.ID, service.Spec.Name, sgURL, modeStr, replicas, portNumber)
 		htmlOutput += "<br/>"
 
 	}
