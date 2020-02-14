@@ -21,17 +21,20 @@ func main() {
 
 	if exists {
 
+		log.Println("Checking for: ", url)
 		router := mux.NewRouter().StrictSlash(true)
 		router.HandleFunc("/swarm-nodes", numberOfSwarmNodes)
 		router.HandleFunc("/swarm-services", listServices)
 		log.Fatal(http.ListenAndServe(":7001", router))
-		log.Fatal("Checking for: ", url)
 
 	}
 
 }
 
 func numberOfSwarmNodes(w http.ResponseWriter, r *http.Request) {
+
+	log.Println("numberOfSwarmNodes")
+
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.37"))
 
 	if err != nil {
@@ -55,6 +58,9 @@ func numberOfSwarmNodes(w http.ResponseWriter, r *http.Request) {
 }
 
 func totalSwarmNodes(cli *client.Client) int {
+
+	log.Println("totalSwarmNodes")
+
 	swarmNodes, err := cli.NodeList(context.Background(), types.NodeListOptions{})
 	if err != nil {
 		panic(err)
@@ -67,6 +73,8 @@ func totalSwarmNodes(cli *client.Client) int {
 }
 
 func listServices(w http.ResponseWriter, r *http.Request) {
+
+	log.Println("listServices")
 
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.37"))
 
