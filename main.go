@@ -15,7 +15,6 @@ import (
 )
 
 type Container struct {
-	ID            int    `json:"id"`
 	ServiceID     string `json:"serviceId"`
 	Name          string `json:"name"`
 	URL           string `json:"URL"`
@@ -106,10 +105,10 @@ func listServices(w http.ResponseWriter, r *http.Request) {
 
 	htmlOutput := "<html>"
 	for _, service := range services {
-		sgURL := ""
+		URL := ""
 		for k, v := range service.Spec.Labels {
 			if k == os.Getenv("URL_LABEL") {
-				sgURL = v
+				URL = v
 			}
 		}
 		modeStr := ""
@@ -134,7 +133,7 @@ func listServices(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		htmlOutput += fmt.Sprintf("%s | %s | %s | %s | %s | %v\n", service.ID, service.Spec.Name, sgURL, modeStr, replicas, portNumber)
+		htmlOutput += fmt.Sprintf("%s | %s | %s | %s | %s | %v\n", service.ID, service.Spec.Name, URL, modeStr, replicas, portNumber)
 		htmlOutput += "<br/>"
 
 	}
@@ -159,12 +158,14 @@ func jsonServices(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nodes := totalSwarmNodes(cli)
+	//clear containers slice to prevent duplication
+	containers = nil
 
 	for _, service := range services {
-		sgURL := ""
+		URL := ""
 		for k, v := range service.Spec.Labels {
 			if k == os.Getenv("URL_LABEL") {
-				sgURL = v
+				URL = v
 			}
 		}
 		modeStr := ""
@@ -191,7 +192,7 @@ func jsonServices(w http.ResponseWriter, r *http.Request) {
 		newContainer := Container{
 			ServiceID:     service.ID,
 			Name:          service.Spec.Name,
-			URL:           sgURL,
+			URL:           URL,
 			RepMode:       modeStr,
 			Replicas:      replicas,
 			PublishedPort: portNumber,
