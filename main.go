@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,6 +13,18 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/gorilla/mux"
 )
+
+type Container struct {
+	ID            int    `json:"id"`
+	ServiceID     string `json:"serviceId"`
+	Name          string `json:"name"`
+	URL           string `json:"URL"`
+	RepMode       string `json:"repMode"`
+	Replicas      string `json:"replicas"`
+	PublishedPort string `json:"pubPort"`
+}
+
+var containers = []Container{}
 
 func main() {
 
@@ -25,6 +38,7 @@ func main() {
 		router := mux.NewRouter().StrictSlash(true)
 		router.HandleFunc("/swarm-nodes", numberOfSwarmNodes)
 		router.HandleFunc("/swarm-services", listServices)
+		router.HandleFunc("/swarm-services-json", jsonServices)
 		log.Fatal(http.ListenAndServe(":7001", router))
 
 	}
@@ -126,4 +140,64 @@ func listServices(w http.ResponseWriter, r *http.Request) {
 	}
 	htmlOutput += "</html>"
 	fmt.Fprint(w, htmlOutput)
+}
+
+func jsonServices(w http.ResponseWriter, r *http.Request) {
+
+	log.Println("JSON")
+
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.37"))
+
+	if err != nil {
+		panic(err)
+	}
+
+	//List all Swarm services
+	services, err := cli.ServiceList(context.Background(), types.ServiceListOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	nodes := totalSwarmNodes(cli)
+
+	for _, service := range services {
+		sgURL := ""
+		for k, v := range service.Spec.Labels {
+			if k == os.Getenv("URL_LABEL") {
+				sgURL = v
+			}
+		}
+		modeStr := ""
+		replicas := ""
+		if service.Spec.Mode.Global != nil {
+			modeStr = "Global"
+			replicas = strconv.Itoa(nodes)
+		}
+		if service.Spec.Mode.Replicated != nil && service.Spec.Mode.Replicated.Replicas != nil {
+			modeStr = "Replicated"
+			replicas = strconv.FormatUint(*service.Spec.Mode.Replicated.Replicas, 10)
+		}
+
+		//Get published port number
+		portNumber := ""
+		for _, port := range service.Endpoint.Ports {
+
+			if port.Protocol == "tcp" {
+
+				portNumber = fmt.Sprint(port.PublishedPort)
+
+			}
+		}
+		newContainer := Container{
+			ServiceID:     service.ID,
+			Name:          service.Spec.Name,
+			URL:           sgURL,
+			RepMode:       modeStr,
+			Replicas:      replicas,
+			PublishedPort: portNumber,
+		}
+		containers = append(containers, newContainer)
+
+	}
+	json.NewEncoder(w).Encode(containers)
 }
