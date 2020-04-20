@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -38,7 +39,7 @@ func main() {
 		router.HandleFunc("/swarm-nodes", numberOfSwarmNodes)
 		router.HandleFunc("/swarm-services", listServices)
 		router.HandleFunc("/swarm-services-json", jsonServices)
-		log.Fatal(http.ListenAndServe(":7001", router))
+		log.Fatal(http.ListenAndServe(":7002", router))
 
 	}
 
@@ -128,10 +129,11 @@ func listServices(w http.ResponseWriter, r *http.Request) {
 
 			if port.Protocol == "tcp" {
 
-				portNumber = fmt.Sprint(port.PublishedPort)
+				portNumber = portNumber + fmt.Sprint(port.PublishedPort) + ","
 
 			}
 		}
+		portNumber = strings.TrimSuffix(portNumber, ",")
 
 		htmlOutput += fmt.Sprintf("%s | %s | %s | %s | %s | %v\n", service.ID, service.Spec.Name, URL, modeStr, replicas, portNumber)
 		htmlOutput += "<br/>"
@@ -185,10 +187,12 @@ func jsonServices(w http.ResponseWriter, r *http.Request) {
 
 			if port.Protocol == "tcp" {
 
-				portNumber = fmt.Sprint(port.PublishedPort)
+				portNumber = portNumber + fmt.Sprint(port.PublishedPort) + ","
 
 			}
 		}
+		portNumber = strings.TrimSuffix(portNumber, ",")
+
 		newContainer := Container{
 			ServiceID:     service.ID,
 			Name:          service.Spec.Name,
