@@ -39,7 +39,7 @@ func main() {
 		router.HandleFunc("/swarm-nodes", numberOfSwarmNodes)
 		router.HandleFunc("/swarm-services", listServices)
 		router.HandleFunc("/swarm-services-json", jsonServices)
-		log.Fatal(http.ListenAndServe(":7002", router))
+		log.Fatal(http.ListenAndServe(":7001", router))
 
 	}
 
