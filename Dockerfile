@@ -1,7 +1,7 @@
 #Building
 FROM golang:alpine AS build-env
 
-RUN apk --no-cache add build-base git bzr mercurial gcc
+RUN apk --no-cache add build-base git mercurial gcc
 
 COPY . /src
 
