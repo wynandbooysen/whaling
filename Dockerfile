@@ -12,6 +12,8 @@ RUN cd /src && go build -o whaling
 #Final image
 FROM alpine:latest
 
+RUN apk --no-cache add curl
+
 ENV URL_LABEL=""
 
 WORKDIR /app
