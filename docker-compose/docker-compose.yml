@@ -21,3 +21,9 @@ services:
       placement:
         constraints:
           - node.role == manager
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/swarm-nodes"]
+      interval: 60s
+      timeout: 3s
+      retries: 3
+      start_period: 3s
